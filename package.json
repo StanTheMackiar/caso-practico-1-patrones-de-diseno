@@ -1,0 +1,16 @@
+{
+  "name": "ues-iccis-backend",
+  "version": "1.0.0",
+  "description": "Backend sencillo en Node.js + Express usando Factory Method.",
+  "type": "module",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "node --watch main.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "4.19.2"
+  }
+}
