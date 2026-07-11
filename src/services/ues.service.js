@@ -1,9 +1,9 @@
 import { createEntity } from '../factories/entity.factory.js';
-import { add, addUnique, assertExists, findById, store } from '../store/memory.store.js';
+import { add, addUnique, assertExists, findById, list as listStore, save } from '../adapters/store.adapter.js';
 import { SOUTH_AMERICAN_COUNTRIES } from '../utils/constants/countries.const.js';
 
 export function list(collectionName) {
-  return store[collectionName];
+  return listStore(collectionName);
 }
 
 export function createFaculty(data) {
@@ -35,6 +35,7 @@ export function createProject(data) {
   }));
 
   professor.projectId = project.id;
+  save('professors', professor);
   return project;
 }
 
@@ -66,6 +67,8 @@ export function enrollStudent(courseId, studentId) {
 
   addUnique(course.studentIds, student.id);
   addUnique(student.courseIds, course.id);
+  save('courses', course);
+  save('students', student);
 
   return course;
 }
@@ -76,6 +79,8 @@ export function addStudentToProject(projectId, studentId) {
 
   addUnique(project.studentIds, student.id);
   addUnique(student.projectIds, project.id);
+  save('projects', project);
+  save('students', student);
 
   return project;
 }
@@ -104,28 +109,36 @@ export function createEvaluation(data) {
 }
 
 export function getReport() {
+  const faculties = listStore('faculties');
+  const professors = listStore('professors');
+  const courses = listStore('courses');
+  const students = listStore('students');
+  const projects = listStore('projects');
+  const evaluations = listStore('evaluations');
+
   return {
     totals: {
-      faculties: store.faculties.length,
-      professors: store.professors.length,
-      courses: store.courses.length,
-      students: store.students.length,
-      projects: store.projects.length,
-      evaluations: store.evaluations.length
+      faculties: faculties.length,
+      professors: professors.length,
+      courses: courses.length,
+      students: students.length,
+      projects: projects.length,
+      evaluations: evaluations.length
     },
-    closedProjects: store.projects.filter((project) => project.status === 'closed'),
-    studentsWithoutProjects: store.students.filter((student) => student.projectIds.length === 0),
-    professorsWithoutProject: store.professors.filter((professor) => !professor.projectId)
+    closedProjects: projects.filter((project) => project.status === 'closed'),
+    studentsWithoutProjects: students.filter((student) => student.projectIds.length === 0),
+    professorsWithoutProject: professors.filter((professor) => !professor.projectId)
   };
 }
 
 function updateProjectStatus(projectId) {
   const project = findById('projects', projectId);
-  const evaluations = store.evaluations.filter((evaluation) => evaluation.projectId === projectId);
+  const evaluations = listStore('evaluations').filter((evaluation) => evaluation.projectId === projectId);
 
   if (evaluations.length === 0) {
     project.evaluationScore = 100;
     project.status = 'active';
+    save('projects', project);
     return project;
   }
 
@@ -134,7 +147,7 @@ function updateProjectStatus(projectId) {
 
   project.evaluationScore = Number((total / evaluations.length).toFixed(2));
   project.status = lowEvaluations / evaluations.length >= 0.5 ? 'closed' : 'active';
+  save('projects', project);
 
   return project;
 }
-

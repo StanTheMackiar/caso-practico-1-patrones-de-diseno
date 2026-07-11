@@ -1,5 +1,5 @@
 import { createEntity } from "../../factories/entity.factory.js";
-import { add } from "../../store/memory.store.js";
+import { add, save } from "../../adapters/store.adapter.js";
 
 export function seed() {
   const faculty = add('faculties', createEntity('faculty', {
@@ -27,6 +27,7 @@ export function seed() {
   }));
 
   professor.projectId = project.id;
+  save('professors', professor);
 
   const studentOne = add('students', createEntity('student', {
     name: 'Ana Torres',

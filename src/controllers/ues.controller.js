@@ -5,7 +5,7 @@ export const collections = ['faculties', 'professors', 'courses', 'students', 'p
 export function getApiInfo(req, res) {
   res.json({
     name: 'UES + ICCIS API',
-    patterns: ['MVC', 'Factory Method'],
+    patterns: ['MVC', 'Factory Method', 'Adapter'],
     resources: collections.map((collection) => `/api/${collection}`),
     report: '/api/report'
   });

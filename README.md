@@ -4,9 +4,18 @@ Aplicacion backend Node.js + Express para administrar facultades, profesores, cu
 
 El patron creacional seleccionado es **Factory Method**. La creacion de entidades se centraliza en `src/factories/entity.factory.js`, donde cada tipo de entidad tiene su metodo creador y el resto de la aplicacion no instancia objetos manualmente.
 
+Tambien se implementa el patron estructural **Adapter** en `src/adapters/store.adapter.js`. La aplicacion trabaja con colecciones y propiedades en formato JavaScript, mientras `src/store/database.store.js` simula una base de datos con tablas y campos en formato `snake_case`.
+
+El flujo del adaptador es sencillo:
+
+1. El servicio solicita o guarda una entidad usando la interfaz habitual.
+2. El adaptador traduce el nombre de la coleccion al nombre de la tabla.
+3. Al guardar, convierte propiedades como `facultyId` a `faculty_id`.
+4. Al consultar, convierte los registros nuevamente al formato que entiende el sistema.
+
 Tambien se agregó un patrón de arquitectura tipo **MVC**:
 
-- **Modelo:** `src/store/memory.store.js`, `src/services/ues.service.js` y `src/factories/entity.factory.js`. Mantienen datos, reglas de negocio y creacion de entidades.
+- **Modelo:** `src/store/database.store.js`, `src/adapters/store.adapter.js`, `src/services/ues.service.js` y `src/factories/entity.factory.js`. Mantienen datos, adaptacion, reglas de negocio y creacion de entidades.
 - **Vista:** al ser una API REST, la vista es la respuesta JSON enviada al cliente.
 - **Controlador:** `src/controllers/ues.controller.js`. Recibe `req`, llama al servicio correspondiente y responde con JSON.
 - **Rutas:** `src/routes/routes.js`. Solo declara endpoints y delega al controlador.
