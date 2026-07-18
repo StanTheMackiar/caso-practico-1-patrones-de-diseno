@@ -1,6 +1,13 @@
 import { createEntity } from '../factories/entity.factory.js';
-import { add, addUnique, assertExists, findById, list as listStore, save } from '../adapters/store.adapter.js';
+import { add, addUnique, assertExists, list as listStore, save } from '../adapters/store.adapter.js';
+import { EvaluationSubject } from '../observers/evaluation.subject.js';
+import { ProjectStatusObserver } from '../observers/project-status.observer.js';
+import { EvaluationAuditObserver } from '../observers/evaluation-audit.observer.js';
 import { SOUTH_AMERICAN_COUNTRIES } from '../utils/constants/countries.const.js';
+
+const evaluationSubject = new EvaluationSubject();
+evaluationSubject.subscribe(new ProjectStatusObserver());
+evaluationSubject.subscribe(new EvaluationAuditObserver());
 
 export function list(collectionName) {
   return listStore(collectionName);
@@ -104,7 +111,7 @@ export function createEvaluation(data) {
     score
   }));
 
-  updateProjectStatus(project.id);
+  evaluationSubject.notify(evaluation);
   return evaluation;
 }
 
@@ -129,25 +136,4 @@ export function getReport() {
     studentsWithoutProjects: students.filter((student) => student.projectIds.length === 0),
     professorsWithoutProject: professors.filter((professor) => !professor.projectId)
   };
-}
-
-function updateProjectStatus(projectId) {
-  const project = findById('projects', projectId);
-  const evaluations = listStore('evaluations').filter((evaluation) => evaluation.projectId === projectId);
-
-  if (evaluations.length === 0) {
-    project.evaluationScore = 100;
-    project.status = 'active';
-    save('projects', project);
-    return project;
-  }
-
-  const total = evaluations.reduce((sum, evaluation) => sum + evaluation.score, 0);
-  const lowEvaluations = evaluations.filter((evaluation) => evaluation.score < 70).length;
-
-  project.evaluationScore = Number((total / evaluations.length).toFixed(2));
-  project.status = lowEvaluations / evaluations.length >= 0.5 ? 'closed' : 'active';
-  save('projects', project);
-
-  return project;
 }

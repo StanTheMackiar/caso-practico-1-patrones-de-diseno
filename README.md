@@ -13,6 +13,23 @@ El flujo del adaptador es sencillo:
 3. Al guardar, convierte propiedades como `facultyId` a `faculty_id`.
 4. Al consultar, convierte los registros nuevamente al formato que entiende el sistema.
 
+Para la tercera parte de la activida se implementa el patrón de comportamiento **Observer**. Cuando se crea una evaluación, el servicio publica el evento mediante `EvaluationSubject` y los observadores suscritos reaccionan sin que el servicio tenga que conocer la lógica interna de cada uno.
+
+Los participantes del patrón son:
+
+- **Sujeto:** `src/observers/evaluation.subject.js`. Permite suscribir, retirar y notificar observadores.
+- **Observador de estado:** `src/observers/project-status.observer.js`. Recalcula el promedio y cambia el estado del proyecto.
+- **Observador de auditoría:** `src/observers/evaluation-audit.observer.js`. Registra en consola la evaluación creada.
+
+El flujo de Observer es síncrono:
+
+1. El servicio valida y guarda la evaluación mediante Factory Method y Adapter.
+2. El sujeto notifica la evaluación a todos los observadores suscritos.
+3. Cada observador ejecuta su responsabilidad mediante el método `update`.
+4. La API responde cuando todos los observadores han terminado.
+
+Observer no requiere una librería ni significa que el proceso se ejecute en segundo plano. En este caso se implementó manualmente para mostrar claramente el patrón y garantizar que el proyecto quede actualizado antes de responder al cliente.
+
 Tambien se agregó un patrón de arquitectura tipo **MVC**:
 
 - **Modelo:** `src/store/database.store.js`, `src/adapters/store.adapter.js`, `src/services/ues.service.js` y `src/factories/entity.factory.js`. Mantienen datos, adaptacion, reglas de negocio y creacion de entidades.
@@ -277,7 +294,7 @@ Reglas:
 - `projectId` debe existir.
 - El estudiante debe participar en el proyecto.
 - `score` debe estar entre `0` y `100`.
-- Despues de crear la evaluacion, se recalcula el promedio del proyecto.
+- Despues de crear la evaluacion, el sujeto notifica a los observadores y se recalcula el promedio del proyecto.
 - Si el 50% o mas de las evaluaciones del proyecto son menores a `70`, el proyecto queda con `status: "closed"`.
 
 Respuesta exitosa: `201 Created` con la evaluacion creada.
